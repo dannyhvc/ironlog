@@ -1,95 +1,176 @@
-/*add workout component*/
+/** biome-ignore-all lint/a11y/noLabelWithoutControl: <explanation> */
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useState } from "react";
 import { db } from "../services/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+
+const EXERCISE_SUGGESTIONS = [
+    "Bench Press",
+    "Squat",
+    "Deadlift",
+    "Pull-Up",
+    "Overhead Press",
+    "Row",
+    "Curl",
+    "Tricep Dip",
+    "Leg Press",
+    "Lunge",
+];
 
 export default function AddWorkout({ userId }) {
-  const [form, setForm] = useState({
-    date: "",
-    exercise: "",
-    sets: "",
-    reps: "",
-  });
-
-  const [loading, setLoading] = useState(false);
-
-  const handleAddWorkout = async () => {
-    const { date, exercise, sets, reps } = form;
-
-    if (!date || !exercise || !sets || !reps) {
-      alert("Fill all fields");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      console.log("START ADD");
-
-      await addDoc(collection(db, "workouts"), {
-        userId,
-        date,
-        exercises: [
-          {
-            name: exercise,
-            sets: Number(sets),
-            reps: Number(reps),
-          },
-        ],
-        createdAt: serverTimestamp(),
-      });
-
-      console.log("FINISHED ADD");
-
-      // reset form
-      setForm({
+    const [form, setForm] = useState({
         date: "",
         exercise: "",
         sets: "",
         reps: "",
-      });
+    });
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
 
-    } catch (err) {
-      console.error("ERROR:", err);
-      alert("Failed to add workout");
-    }
+    const set = (field) => (e) =>
+        setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
-    setLoading(false); // ALWAYS reset
-  };
+    const handleAdd = async () => {
+        const { date, exercise, sets, reps } = form;
+        if (!date || !exercise || !sets || !reps) return;
 
-  return (
-    <div>
-      <h3>Add Workout</h3>
+        setLoading(true);
+        try {
+            await addDoc(collection(db, "workouts"), {
+                userId,
+                date,
+                exercises: [
+                    { name: exercise, sets: Number(sets), reps: Number(reps) },
+                ],
+                createdAt: serverTimestamp(),
+            });
+            setForm({ date: "", exercise: "", sets: "", reps: "" });
+            setSuccess(true);
+            setTimeout(() => setSuccess(false), 2500);
+        } catch (err) {
+            console.error(err);
+        }
+        setLoading(false);
+    };
 
-      <input
-        type="date"
-        value={form.date}
-        onChange={(e) => setForm({ ...form, date: e.target.value })}
-      />
+    const todayISO = new Date().toLocaleDateString("en-CA");
+    const isValid = form.date && form.exercise && form.sets && form.reps;
 
-      <input
-        placeholder="Exercise"
-        value={form.exercise}
-        onChange={(e) => setForm({ ...form, exercise: e.target.value })}
-      />
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            {/* Date */}
+            <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Date</label>
+                <input
+                    className="form-input"
+                    type="date"
+                    value={form.date}
+                    max={todayISO}
+                    onChange={set("date")}
+                />
+            </div>
 
-      <input
-        type="number"
-        placeholder="Sets"
-        value={form.sets}
-        onChange={(e) => setForm({ ...form, sets: e.target.value })}
-      />
+            {/* Exercise */}
+            <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">
+                    Exercise
+                </label>
+                <input
+                    name="exercise"
+                    className="form-input"
+                    list="exercise-suggestions"
+                    placeholder="e.g. Bench Press"
+                    value={form.exercise}
+                    onChange={set("exercise")}
+                />
+                <datalist id="exercise-suggestions">
+                    {EXERCISE_SUGGESTIONS.map((s) => (
+                        <option key={s} value={s} />
+                    ))}
+                </datalist>
+            </div>
 
-      <input
-        type="number"
-        placeholder="Reps"
-        value={form.reps}
-        onChange={(e) => setForm({ ...form, reps: e.target.value })}
-      />
+            {/* Sets & Reps */}
+            <div className="add-workout__grid">
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">
+                        Sets
+                    </label>
+                    <input
+                        names="sets"
+                        className="form-input"
+                        type="number"
+                        min="1"
+                        max="99"
+                        placeholder="3"
+                        value={form.sets}
+                        onChange={set("sets")}
+                    />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">
+                        Reps
+                    </label>
+                    <input
+                        name="reps"
+                        className="form-input"
+                        type="number"
+                        min="1"
+                        max="999"
+                        placeholder="10"
+                        value={form.reps}
+                        onChange={set("reps")}
+                    />
+                </div>
+            </div>
 
-      <button onClick={handleAddWorkout} disabled={loading}>
-        {loading ? "Adding..." : "Add Workout"}
-      </button>
-    </div>
-  );
+            {/* Volume preview */}
+            {form.sets && form.reps && (
+                <div
+                    style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "0.78rem",
+                        color: "var(--text-3)",
+                        padding: "8px 12px",
+                        background: "var(--surface-3)",
+                        borderRadius: "var(--radius-sm)",
+                        border: "1px solid var(--border)",
+                    }}
+                >
+                    Volume:{" "}
+                    <span style={{ color: "var(--accent)" }}>
+                        {(
+                            Number(form.sets) * Number(form.reps)
+                        ).toLocaleString()}{" "}
+                        reps
+                    </span>
+                </div>
+            )}
+
+            <button
+                type="button"
+                className="btn btn--primary"
+                onClick={handleAdd}
+                disabled={loading || !isValid}
+                style={
+                    success
+                        ? { background: "var(--success)", boxShadow: "none" }
+                        : {}
+                }
+            >
+                {loading ? (
+                    <>
+                        <span
+                            className="loading-spinner"
+                            style={{ width: 14, height: 14, borderWidth: 2 }}
+                        />
+                        Saving...
+                    </>
+                ) : success ? (
+                    "Logged! :)"
+                ) : (
+                    "Log Workout +"
+                )}
+            </button>
+        </div>
+    );
 }
