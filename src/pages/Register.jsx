@@ -14,6 +14,131 @@ const friendlyError = (code) => {
     return map[code] ?? "Something went wrong. Please try again.";
 };
 
+const FormPanel = ({
+    error,
+    email,
+    setEmail,
+    handleKeyDown,
+    password,
+    setPassword,
+    confirm,
+    setConfirm,
+    handleRegister,
+    loading,
+}) => (
+    <div className="auth-form-panel">
+        <div className="auth-form fade-up">
+            <div className="auth-form__header">
+                <h2 className="auth-form__title">CREATE ACCOUNT</h2>
+                <p className="auth-form__subtitle">
+                    Already training? <Link to="/">Sign in instead</Link>
+                </p>
+            </div>
+
+            {error && <div className="inline-error">{error}</div>}
+
+            <div className="form-group">
+                <label for="email" className="form-label">
+                    Email
+                </label>
+                <input
+                    name="email"
+                    className="form-input"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    autoComplete="email"
+                />
+            </div>
+
+            <div className="form-group">
+                <label for="password" className="form-label">
+                    Password
+                </label>
+                <input
+                    name="password"
+                    className="form-input"
+                    type="password"
+                    placeholder="Min. 6 characters"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    autoComplete="new-password"
+                />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: "28px" }}>
+                <label for="new-password" className="form-label">
+                    Confirm Password
+                </label>
+                <input
+                    name="new-password"
+                    className="form-input"
+                    type="password"
+                    placeholder="Repeat password"
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    autoComplete="new-password"
+                />
+            </div>
+
+            <button
+                type="button"
+                className="btn btn--primary"
+                onClick={handleRegister}
+                disabled={loading}
+            >
+                {loading ? (
+                    <>
+                        <span
+                            className="loading-spinner"
+                            style={{
+                                width: 16,
+                                height: 16,
+                                borderWidth: 2,
+                            }}
+                        />
+                        Creating account…
+                    </>
+                ) : (
+                    "Create Account →"
+                )}
+            </button>
+        </div>
+    </div>
+);
+
+const BrandPanel = () => (
+    <div className="auth-brand">
+        <div className="auth-brand__tagline">
+            YOUR
+            <span>JOURNEY</span>
+            STARTS.
+        </div>
+        <p className="auth-brand__desc">
+            Build your training history from day one. Log every session, track
+            your volume, and watch the progress compound over time.
+        </p>
+        <div className="auth-brand__stats">
+            <div className="auth-brand__stat">
+                <span className="auth-brand__stat-num">FREE</span>
+                <span className="auth-brand__stat-label">Forever</span>
+            </div>
+            <div className="auth-brand__stat">
+                <span className="auth-brand__stat-num">∞</span>
+                <span className="auth-brand__stat-label">Workouts</span>
+            </div>
+            <div className="auth-brand__stat">
+                <span className="auth-brand__stat-num">1</span>
+                <span className="auth-brand__stat-label">Step to start</span>
+            </div>
+        </div>
+    </div>
+);
+
 export default function Register() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -53,123 +178,21 @@ export default function Register() {
     return (
         <div className="auth-page">
             {/* Brand panel */}
-            <div className="auth-brand">
-                <div className="auth-brand__tagline">
-                    YOUR
-                    <span>JOURNEY</span>
-                    STARTS.
-                </div>
-                <p className="auth-brand__desc">
-                    Build your training history from day one. Log every session,
-                    track your volume, and watch the progress compound over
-                    time.
-                </p>
-                <div className="auth-brand__stats">
-                    <div className="auth-brand__stat">
-                        <span className="auth-brand__stat-num">FREE</span>
-                        <span className="auth-brand__stat-label">Forever</span>
-                    </div>
-                    <div className="auth-brand__stat">
-                        <span className="auth-brand__stat-num">∞</span>
-                        <span className="auth-brand__stat-label">Workouts</span>
-                    </div>
-                    <div className="auth-brand__stat">
-                        <span className="auth-brand__stat-num">1</span>
-                        <span className="auth-brand__stat-label">
-                            Step to start
-                        </span>
-                    </div>
-                </div>
-            </div>
+            <BrandPanel />
 
             {/* Form panel */}
-            <div className="auth-form-panel">
-                <div className="auth-form fade-up">
-                    <div className="auth-form__header">
-                        <h2 className="auth-form__title">CREATE ACCOUNT</h2>
-                        <p className="auth-form__subtitle">
-                            Already training?{" "}
-                            <Link to="/">Sign in instead</Link>
-                        </p>
-                    </div>
-
-                    {error && <div className="inline-error">{error}</div>}
-
-                    <div className="form-group">
-                        <label for="email" className="form-label">
-                            Email
-                        </label>
-                        <input
-                            name="email"
-                            className="form-input"
-                            type="email"
-                            placeholder="you@example.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            autoComplete="email"
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label for="password" className="form-label">
-                            Password
-                        </label>
-                        <input
-                            name="password"
-                            className="form-input"
-                            type="password"
-                            placeholder="Min. 6 characters"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            autoComplete="new-password"
-                        />
-                    </div>
-
-                    <div
-                        className="form-group"
-                        style={{ marginBottom: "28px" }}
-                    >
-                        <label for="new-password" className="form-label">
-                            Confirm Password
-                        </label>
-                        <input
-                            name="new-password"
-                            className="form-input"
-                            type="password"
-                            placeholder="Repeat password"
-                            value={confirm}
-                            onChange={(e) => setConfirm(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            autoComplete="new-password"
-                        />
-                    </div>
-
-                    <button
-                        type="button"
-                        className="btn btn--primary"
-                        onClick={handleRegister}
-                        disabled={loading}
-                    >
-                        {loading ? (
-                            <>
-                                <span
-                                    className="loading-spinner"
-                                    style={{
-                                        width: 16,
-                                        height: 16,
-                                        borderWidth: 2,
-                                    }}
-                                />
-                                Creating account…
-                            </>
-                        ) : (
-                            "Create Account →"
-                        )}
-                    </button>
-                </div>
-            </div>
+            <FormPanel
+                error={error}
+                email={email}
+                setEmail={setEmail}
+                handleKeyDown={handleKeyDown}
+                password={password}
+                setPassword={setPassword}
+                confirm={confirm}
+                setConfirm={setConfirm}
+                handleRegister={handleRegister}
+                loading={loading}
+            />
         </div>
     );
 }

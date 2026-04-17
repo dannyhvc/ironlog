@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/correctness/useJsxKeyInIterable: ... */
 import {
     collection,
     deleteDoc,
@@ -10,7 +11,141 @@ import {
 import { useEffect, useState } from "react";
 import { db } from "../services/firebase";
 
-export default function TodayWorkout({ userId }) {
+function formatDate(iso) {
+    const d = new Date(`${iso}T00:00:00`);
+    const today = new Date();
+    const DAY_IN_MS = 86400000;
+
+    today.setHours(0, 0, 0, 0);
+    const diff = Math.round((today - d) / DAY_IN_MS);
+
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Yesterday";
+    return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    });
+}
+
+const DateSeparator = ({ date }) => (
+    <div
+        style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.7rem",
+            color: "var(--text-3)",
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+            padding: "4px 0 8px",
+            borderBottom: "1px solid var(--border)",
+            marginBottom: "8px",
+        }}
+    >
+        {formatDate(date)}
+    </div>
+);
+
+const ViewMode = ({ w, startEdit, handleDelete }) => (
+    <div key={w.id} className="workout-item">
+        <div className="workout-item__header">
+            <div className="workout-item__date">
+                <span className="workout-item__date-dot" />
+                {formatDate(w.date)}
+            </div>
+            <div className="workout-item__actions">
+                <button
+                    type="button"
+                    className="btn btn--ghost btn--icon"
+                    title="Edit"
+                    onClick={() => startEdit(w)}
+                >
+                    ✎
+                </button>
+                <button
+                    type="button"
+                    className="btn btn--danger btn--icon"
+                    title="Delete"
+                    onClick={() => handleDelete(w.id)}
+                >
+                    ✕
+                </button>
+            </div>
+        </div>
+
+        {w.exercises.map((e, i) => (
+            <SetsRepsStatus index={i} exer={e} />
+        ))}
+    </div>
+);
+
+const SetsRepsStatus = ({ index, exer }) => (
+    <div key={index} className="workout-item__exercise">
+        <span className="workout-item__name">{exer.name}</span>
+        <div className="workout-item__stats">
+            <span className="workout-item__stat-pill workout-item__stat-pill--sets">
+                {exer.sets}s
+            </span>
+            <span className="workout-item__stat-pill workout-item__stat-pill--reps">
+                {exer.reps}r
+            </span>
+        </div>
+    </div>
+);
+
+const EditMode = ({
+    w,
+    editData,
+    setEdit,
+    handleUpdate,
+    saving,
+    setEditingId,
+}) => (
+    <div key={w.id} className="workout-item workout-item--editing">
+        <div className="workout-item__edit-grid">
+            <input
+                className="form-input form-input--sm"
+                value={editData.exercise}
+                onChange={setEdit("exercise")}
+                placeholder="Exercise"
+            />
+            <input
+                className="form-input form-input--sm"
+                type="number"
+                min="1"
+                value={editData.sets}
+                onChange={setEdit("sets")}
+                placeholder="Sets"
+            />
+            <input
+                className="form-input form-input--sm"
+                type="number"
+                min="1"
+                value={editData.reps}
+                onChange={setEdit("reps")}
+                placeholder="Reps"
+            />
+        </div>
+        <div className="workout-item__edit-actions">
+            <button
+                type="button"
+                className="btn btn--primary btn--sm"
+                onClick={() => handleUpdate(w.id)}
+                disabled={saving}
+            >
+                {saving ? "Saving…" : "Save"}
+            </button>
+            <button
+                type="button"
+                className="btn btn--ghost btn--sm"
+                onClick={() => setEditingId(null)}
+            >
+                Cancel
+            </button>
+        </div>
+    </div>
+);
+
+const useTodaysWorkout = (userId) => {
     const [workouts, setWorkouts] = useState([]);
     const [editingId, setEditingId] = useState(null);
     const [editData, setEditData] = useState({
@@ -65,6 +200,38 @@ export default function TodayWorkout({ userId }) {
         setSaving(false);
     };
 
+    return {
+        // callbacks
+        startEdit,
+        handleDelete,
+        handleUpdate,
+        // states
+        workouts,
+        setWorkouts,
+        editingId,
+        setEditingId,
+        editData,
+        setEditData,
+        saving,
+        setSaving,
+    };
+};
+
+export default function TodayWorkout({ userId }) {
+    const {
+        // callbacks
+        startEdit,
+        handleDelete,
+        handleUpdate,
+        // states
+        workouts,
+        editingId,
+        setEditingId,
+        editData,
+        setEditData,
+        saving,
+    } = useTodaysWorkout(userId);
+
     const setEdit = (field) => (e) =>
         setEditData((prev) => ({ ...prev, [field]: e.target.value }));
 
@@ -92,139 +259,30 @@ export default function TodayWorkout({ userId }) {
         <div className="workout-list">
             {Object.entries(grouped).map(([date, items]) => (
                 <div key={date}>
-                    {/* Date separator */}
-                    <div
-                        style={{
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "0.7rem",
-                            color: "var(--text-3)",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.1em",
-                            padding: "4px 0 8px",
-                            borderBottom: "1px solid var(--border)",
-                            marginBottom: "8px",
-                        }}
-                    >
-                        {formatDate(date)}
-                    </div>
+                    <DateSeparator date={date} />
 
                     {items.map((w) =>
                         editingId === w.id ? (
-                            /* Edit mode */
-                            <div
-                                key={w.id}
-                                className="workout-item workout-item--editing"
-                            >
-                                <div className="workout-item__edit-grid">
-                                    <input
-                                        className="form-input form-input--sm"
-                                        value={editData.exercise}
-                                        onChange={setEdit("exercise")}
-                                        placeholder="Exercise"
-                                    />
-                                    <input
-                                        className="form-input form-input--sm"
-                                        type="number"
-                                        min="1"
-                                        value={editData.sets}
-                                        onChange={setEdit("sets")}
-                                        placeholder="Sets"
-                                    />
-                                    <input
-                                        className="form-input form-input--sm"
-                                        type="number"
-                                        min="1"
-                                        value={editData.reps}
-                                        onChange={setEdit("reps")}
-                                        placeholder="Reps"
-                                    />
-                                </div>
-                                <div className="workout-item__edit-actions">
-                                    <button
-                                        type="button"
-                                        className="btn btn--primary btn--sm"
-                                        onClick={() => handleUpdate(w.id)}
-                                        disabled={saving}
-                                    >
-                                        {saving ? "Saving…" : "Save"}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="btn btn--ghost btn--sm"
-                                        onClick={() => setEditingId(null)}
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </div>
+                            <EditMode
+                                w={w}
+                                editData={editData}
+                                setEdit={setEdit}
+                                handleUpdate={handleUpdate}
+                                saving={saving}
+                                setEditingId={setEditingId}
+                            />
                         ) : (
-                            /* View mode */
-                            <div key={w.id} className="workout-item">
-                                <div className="workout-item__header">
-                                    <div className="workout-item__date">
-                                        <span className="workout-item__date-dot" />
-                                        {formatDate(w.date)}
-                                    </div>
-                                    <div className="workout-item__actions">
-                                        <button
-                                            type="button"
-                                            className="btn btn--ghost btn--icon"
-                                            title="Edit"
-                                            onClick={() => startEdit(w)}
-                                        >
-                                            ✎
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="btn btn--danger btn--icon"
-                                            title="Delete"
-                                            onClick={() => handleDelete(w.id)}
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {w.exercises.map((e, i) => (
-                                    <div
-                                        key={i}
-                                        className="workout-item__exercise"
-                                    >
-                                        <span className="workout-item__name">
-                                            {e.name}
-                                        </span>
-                                        <div className="workout-item__stats">
-                                            <span className="workout-item__stat-pill workout-item__stat-pill--sets">
-                                                {e.sets}s
-                                            </span>
-                                            <span className="workout-item__stat-pill workout-item__stat-pill--reps">
-                                                {e.reps}r
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                            <ViewMode
+                                w={w}
+                                startEdi
+                                t={startEdit}
+                                handleDelet
+                                e={handleDelete}
+                            />
                         ),
                     )}
                 </div>
             ))}
         </div>
     );
-}
-
-function formatDate(iso) {
-    const d = new Date(`${iso}T00:00:00`);
-    const today = new Date();
-    const DAY_IN_MS = 86400000;
-
-    today.setHours(0, 0, 0, 0);
-    const diff = Math.round((today - d) / DAY_IN_MS);
-
-    if (diff === 0) return "Today";
-    if (diff === 1) return "Yesterday";
-    return d.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-    });
 }
