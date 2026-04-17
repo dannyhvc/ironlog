@@ -16,7 +16,7 @@ const EXERCISE_SUGGESTIONS = [
     "Lunge",
 ];
 
-const LogExerciseSubmit = ({ handleAdd, loading, isValid, success }) => (
+const LogExerciseSubmit = (handleAdd, loading, isValid, success) => (
     <button
         type="button"
         className="btn btn--primary"
@@ -42,8 +42,27 @@ const LogExerciseSubmit = ({ handleAdd, loading, isValid, success }) => (
     </button>
 );
 
-const RepsSetsSetterForm = ({ form, set }) => (
-    <div className="add-workout__grid">
+const StatsSetterForm = ({ form, set }) => (
+    <div
+        className="add-workout__grid"
+        style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: "10px",
+        }}
+    >
+        <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label">Weight</label>
+            <input
+                name="weight"
+                className="form-input"
+                type="number"
+                min="0"
+                placeholder="lbs"
+                value={form.weight}
+                onChange={set("weight")}
+            />
+        </div>
         <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Sets</label>
             <input
@@ -109,6 +128,7 @@ export default function AddWorkout({ userId }) {
     const [form, setForm] = useState({
         date: "",
         exercise: "",
+        weight: "",
         sets: "",
         reps: "",
     });
@@ -119,8 +139,8 @@ export default function AddWorkout({ userId }) {
         setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
     const handleAdd = async () => {
-        const { date, exercise, sets, reps } = form;
-        if (!date || !exercise || !sets || !reps) return;
+        const { date, exercise, weight, sets, reps } = form;
+        if (!date || !exercise || !weight || !sets || !reps) return;
 
         setLoading(true);
         try {
@@ -128,11 +148,16 @@ export default function AddWorkout({ userId }) {
                 userId,
                 date,
                 exercises: [
-                    { name: exercise, sets: Number(sets), reps: Number(reps) },
+                    {
+                        name: exercise,
+                        weight: Number(weight),
+                        sets: Number(sets),
+                        reps: Number(reps),
+                    },
                 ],
                 createdAt: serverTimestamp(),
             });
-            setForm({ date: "", exercise: "", sets: "", reps: "" });
+            setForm({ date: "", exercise: "", weight: "", sets: "", reps: "" });
             setSuccess(true);
             setTimeout(() => setSuccess(false), 2500);
         } catch (err) {
@@ -142,21 +167,16 @@ export default function AddWorkout({ userId }) {
     };
 
     const todayISO = new Date().toLocaleDateString("en-CA");
-    const isValid = form.date && form.exercise && form.sets && form.reps;
+    const isValid =
+        form.date && form.exercise && form.weight && form.sets && form.reps;
 
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {/* Date */}
             <DatePickerForm form={form} todayISO={todayISO} set={set} />
-
-            {/* Exercise */}
             <ExercisePickerForm form={form} set={set} />
+            <StatsSetterForm form={form} set={set} />
 
-            {/* Sets & Reps */}
-            <RepsSetsSetterForm form={form} set={set} />
-
-            {/* Volume preview */}
-            {form.sets && form.reps && (
+            {form.sets && form.reps && form.weight && (
                 <div
                     style={{
                         fontFamily: "var(--font-mono)",
@@ -171,9 +191,11 @@ export default function AddWorkout({ userId }) {
                     Volume:{" "}
                     <span style={{ color: "var(--accent)" }}>
                         {(
-                            Number(form.sets) * Number(form.reps)
+                            Number(form.sets) *
+                            Number(form.reps) *
+                            Number(form.weight)
                         ).toLocaleString()}{" "}
-                        reps
+                        total lifted
                     </span>
                 </div>
             )}
