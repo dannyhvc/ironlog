@@ -1,27 +1,36 @@
-/*navbar component*/
-import { Link } from "react-router-dom";
+/* navbar component */
+import { Link, useLocation } from "react-router-dom";
 
 export default function Navbar() {
-  return (
-    <nav style={styles.nav}>
-      <Link to="/" style={styles.link}>Login</Link>
-      <Link to="/register" style={styles.link}>Register</Link>
-      <Link to="/dashboard" style={styles.link}>Dashboard</Link>
-    </nav>
-  );
-}
+    const { pathname } = useLocation();
 
-const styles = {
-  nav: {
-    display: "flex",
-    justifyContent: "center",
-    gap: "20px",
-    padding: "15px",
-    background: "#222",
-  },
-  link: {
-    color: "white",
-    textDecoration: "none",
-    fontWeight: "bold",
-  },
-};
+    return (
+        <nav className="navbar">
+            <Link to="/" className="navbar__logo">
+                <div className="navbar__logo-icon">IL</div>
+                IRON<span>LOG</span>
+            </Link>
+
+            <div className="navbar__links">
+                <Link
+                    to="/"
+                    className={`navbar__link ${pathname === "/" ? "active" : ""}`}
+                >
+                    Login
+                </Link>
+                <Link
+                    to="/register"
+                    className={`navbar__link ${pathname === "/register" ? "active" : ""}`}
+                >
+                    Register
+                </Link>
+                <Link
+                    to="/dashboard"
+                    className={`navbar__link ${pathname === "/dashboard" ? "active" : ""}`}
+                >
+                    Dashboard
+                </Link>
+            </div>
+        </nav>
+    );
+}
