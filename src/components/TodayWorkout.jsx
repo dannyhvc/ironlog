@@ -1,4 +1,5 @@
 /** biome-ignore-all lint/correctness/useJsxKeyInIterable: ... */
+import { OneRepMaxEstimator } from "./OneRepMaxEstimator";
 import {
     collection,
     deleteDoc,
@@ -71,9 +72,8 @@ const ViewMode = ({ w, startEdit, handleDelete }) => (
                 </button>
             </div>
         </div>
-
         {w.exercises.map((e, i) => (
-            <SetsRepsStatus index={i} exer={e} />
+            <SetsRepsStatus key={i} index={i} exer={e} />
         ))}
     </div>
 );
@@ -81,12 +81,24 @@ const ViewMode = ({ w, startEdit, handleDelete }) => (
 const SetsRepsStatus = ({ index, exer }) => (
     <div key={index} className="workout-item__exercise">
         <span className="workout-item__name">{exer.name}</span>
-        <div className="workout-item__stats">
+        <div className="workout-item__stats" style={{ alignItems: "center" }}>
+            <OneRepMaxEstimator
+                weight={exer.weight}
+                reps={exer.reps}
+                variant="pill"
+            />
+
+            <span
+                className="workout-item__stat-pill workout-item__stat-pill--weight"
+                style={{ background: "var(--surface-2)" }}
+            >
+                {exer.weight} w
+            </span>
             <span className="workout-item__stat-pill workout-item__stat-pill--sets">
-                {exer.sets}s
+                {exer.sets} s
             </span>
             <span className="workout-item__stat-pill workout-item__stat-pill--reps">
-                {exer.reps}r
+                {exer.reps} r
             </span>
         </div>
     </div>
@@ -101,15 +113,29 @@ const EditMode = ({
     setEditingId,
 }) => (
     <div key={w.id} className="workout-item workout-item--editing">
-        <div className="workout-item__edit-grid">
+        <div
+            className="workout-item__edit-grid"
+            style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
+        >
             <input
                 className="form-input form-input--sm"
+                style={{ flex: "1 1 100%" }}
                 value={editData.exercise}
                 onChange={setEdit("exercise")}
                 placeholder="Exercise"
             />
             <input
                 className="form-input form-input--sm"
+                style={{ flex: 1 }}
+                type="number"
+                min="0"
+                value={editData.weight}
+                onChange={setEdit("weight")}
+                placeholder="Weight"
+            />
+            <input
+                className="form-input form-input--sm"
+                style={{ flex: 1 }}
                 type="number"
                 min="1"
                 value={editData.sets}
@@ -118,6 +144,7 @@ const EditMode = ({
             />
             <input
                 className="form-input form-input--sm"
+                style={{ flex: 1 }}
                 type="number"
                 min="1"
                 value={editData.reps}
@@ -125,7 +152,10 @@ const EditMode = ({
                 placeholder="Reps"
             />
         </div>
-        <div className="workout-item__edit-actions">
+        <div
+            className="workout-item__edit-actions"
+            style={{ marginTop: "8px" }}
+        >
             <button
                 type="button"
                 className="btn btn--primary btn--sm"
@@ -150,6 +180,7 @@ const useTodaysWorkout = (userId) => {
     const [editingId, setEditingId] = useState(null);
     const [editData, setEditData] = useState({
         exercise: "",
+        weight: "",
         sets: "",
         reps: "",
     });
@@ -180,6 +211,7 @@ const useTodaysWorkout = (userId) => {
         const e = w.exercises[0];
         setEditData({
             exercise: e.name,
+            weight: String(e.weight || 0),
             sets: String(e.sets),
             reps: String(e.reps),
         });
@@ -191,6 +223,7 @@ const useTodaysWorkout = (userId) => {
             exercises: [
                 {
                     name: editData.exercise,
+                    weight: Number(editData.weight),
                     sets: Number(editData.sets),
                     reps: Number(editData.reps),
                 },
@@ -201,29 +234,23 @@ const useTodaysWorkout = (userId) => {
     };
 
     return {
-        // callbacks
         startEdit,
         handleDelete,
         handleUpdate,
-        // states
         workouts,
-        setWorkouts,
         editingId,
         setEditingId,
         editData,
         setEditData,
         saving,
-        setSaving,
     };
 };
 
 export default function TodayWorkout({ userId }) {
     const {
-        // callbacks
         startEdit,
         handleDelete,
         handleUpdate,
-        // states
         workouts,
         editingId,
         setEditingId,
@@ -248,7 +275,6 @@ export default function TodayWorkout({ userId }) {
         );
     }
 
-    /* group by date for display */
     const grouped = workouts.reduce((acc, w) => {
         if (!acc[w.date]) acc[w.date] = [];
         acc[w.date].push(w);
@@ -260,10 +286,10 @@ export default function TodayWorkout({ userId }) {
             {Object.entries(grouped).map(([date, items]) => (
                 <div key={date}>
                     <DateSeparator date={date} />
-
                     {items.map((w) =>
                         editingId === w.id ? (
                             <EditMode
+                                key={w.id}
                                 w={w}
                                 editData={editData}
                                 setEdit={setEdit}
@@ -273,11 +299,10 @@ export default function TodayWorkout({ userId }) {
                             />
                         ) : (
                             <ViewMode
+                                key={w.id}
                                 w={w}
-                                startEdi
-                                t={startEdit}
-                                handleDelet
-                                e={handleDelete}
+                                startEdit={startEdit}
+                                handleDelete={handleDelete}
                             />
                         ),
                     )}
