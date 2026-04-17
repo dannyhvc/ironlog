@@ -1,4 +1,5 @@
 /** biome-ignore-all lint/correctness/useJsxKeyInIterable: ... */
+/** biome-ignore-all lint/suspicious/noArrayIndexKey: ... */
 import {
     collection,
     deleteDoc,
@@ -46,7 +47,7 @@ const DateSeparator = ({ date }) => (
 );
 
 const ViewMode = ({ w, startEdit, handleDelete }) => (
-    <div key={w.id} className="workout-item">
+    <div className="workout-item">
         <div className="workout-item__header">
             <div className="workout-item__date">
                 <span className="workout-item__date-dot" />
@@ -73,7 +74,7 @@ const ViewMode = ({ w, startEdit, handleDelete }) => (
         </div>
 
         {w.exercises.map((e, i) => (
-            <SetsRepsStatus index={i} exer={e} />
+            <SetsRepsStatus key={i} index={i} exer={e} />
         ))}
     </div>
 );
@@ -273,11 +274,10 @@ export default function TodayWorkout({ userId }) {
                             />
                         ) : (
                             <ViewMode
+                                key={w.id}
                                 w={w}
-                                startEdi
-                                t={startEdit}
-                                handleDelet
-                                e={handleDelete}
+                                startEdit={startEdit}
+                                handleDelete={handleDelete}
                             />
                         ),
                     )}

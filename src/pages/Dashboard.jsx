@@ -6,6 +6,7 @@ import AddWorkout from "../components/AddWorkout";
 import ProgressChart from "../components/ProgressChart";
 import TodayWorkout from "../components/TodayWorkout";
 import { auth, db } from "../services/firebase";
+import { Area, AreaChart, ResponsiveContainer } from "recharts";
 
 const DashboardHeader = ({ emailShort, userEmail, callback }) => (
     <div className="dashboard__header fade-up">
@@ -74,19 +75,53 @@ const DashboardRightPanel = ({ workoutCount, user }) => (
     </div>
 );
 
-const DashboardStatsRow = (workoutCount, totalVolume, uniqueExer) => (
+const DashboardStatsRow = ({
+    workoutCount,
+    totalVolume,
+    uniqueExer,
+    historyData,
+}) => (
     <div className="stats-row fade-up fade-up--1">
         <div className="stat-card">
             <span className="stat-card__label">Sessions Logged</span>
-            {/* <span className="stat-card__value">{workoutCount}</span> */}
+            <span className="stat-card__value">{workoutCount}</span>
             <span className="stat-card__unit">total workouts</span>
         </div>
         <div className="stat-card">
-            <span className="stat-card__label">Total Volume</span>
-            <span className="stat-card__value">
-                {/*{totalVolume.toLocaleString()}*/}
-            </span>
-            <span className="stat-card__unit">reps lifted</span>
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                }}
+            >
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "6px",
+                    }}
+                >
+                    <span className="stat-card__label">Total Volume</span>
+                    <span className="stat-card__value">
+                        {totalVolume.toLocaleString()}
+                    </span>
+                    <span className="stat-card__unit">reps lifted</span>
+                </div>
+                <div style={{ width: "80px", height: "40px" }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={historyData}>
+                            <Area
+                                type="monotone"
+                                dataKey="vol"
+                                stroke="#3b82f6"
+                                fill="#3b82f6"
+                                fillOpacity={0.2}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
         </div>
         <div className="stat-card">
             <span className="stat-card__label">Exercises</span>

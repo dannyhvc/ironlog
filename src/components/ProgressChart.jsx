@@ -1,6 +1,26 @@
+/** biome-ignore-all lint/suspicious/noArrayIndexKey: ... */
+import React, { useEffect, useState, useMemo } from "react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
-import { useEffect, useState } from "react";
 import { db } from "../services/firebase";
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    Cell,
+} from "recharts";
+
+const COLORS = [
+    "#3b82f6",
+    "#6366f1",
+    "#8b5cf6",
+    "#a855f7",
+    "#d946ef",
+    "#ec4899",
+];
 
 export default function ProgressChart({ userId }) {
     const [data, setData] = useState([]);
@@ -11,6 +31,7 @@ export default function ProgressChart({ userId }) {
             collection(db, "workouts"),
             where("userId", "==", userId),
         );
+
         const unsub = onSnapshot(q, (snap) => {
             const map = {};
             snap.docs.forEach((d) => {
@@ -20,59 +41,66 @@ export default function ProgressChart({ userId }) {
                 });
             });
 
-            /* sort descending, take top 6 */
-            const sorted = Object.entries(map)
-                .sort((a, b) => b[1] - a[1])
+            const formattedData = Object.entries(map)
+                .map(([name, volume]) => ({ name, volume }))
+                .sort((a, b) => b.volume - a.volume)
                 .slice(0, 6);
 
-            setData(sorted);
+            setData(formattedData);
         });
         return unsub;
     }, [userId]);
 
     if (data.length === 0) {
         return (
-            <div className="empty-state" style={{ padding: "24px 0" }}>
-                <div
-                    className="empty-state__icon"
-                    style={{ fontSize: "1.8rem" }}
-                >
-                    📊
-                </div>
+            <div className="empty-state">
                 <p className="empty-state__text">
-                    Log workouts to see progress.
+                    Log workouts to see progress charts.
                 </p>
             </div>
         );
     }
 
-    const max = data[0]?.[1] || 1;
-
     return (
-        <div className="progress-list">
-            {data.map(([name, volume], i) => {
-                const pct = Math.max(4, Math.round((volume / max) * 100));
-                return (
-                    <div
-                        key={name}
-                        className="progress-item"
-                        style={{ animationDelay: `${i * 0.07}s` }}
-                    >
-                        <div className="progress-item__header">
-                            <span className="progress-item__name">{name}</span>
-                            <span className="progress-item__volume">
-                                {volume.toLocaleString()} reps
-                            </span>
-                        </div>
-                        <div className="progress-bar-track">
-                            <div
-                                className="progress-bar-fill"
-                                style={{ width: `${pct}%` }}
+        <div style={{ width: "100%", height: 300, marginTop: "20px" }}>
+            <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                    data={data}
+                    layout="vertical"
+                    margin={{ left: 20, right: 20 }}
+                >
+                    <CartesianGrid
+                        strokeDasharray="3 3"
+                        horizontal={false}
+                        stroke="#334155"
+                    />
+                    <XAxis type="number" hide />
+                    <YAxis
+                        dataKey="name"
+                        type="category"
+                        stroke="#94a3b8"
+                        fontSize={12}
+                        width={80}
+                    />
+                    <Tooltip
+                        cursor={{ fill: "transparent" }}
+                        contentStyle={{
+                            backgroundColor: "#1e293b",
+                            border: "none",
+                            borderRadius: "8px",
+                            color: "#f8fafc",
+                        }}
+                    />
+                    <Bar dataKey="volume" radius={[0, 4, 4, 0]} barSize={20}>
+                        {data.map((_entry, index) => (
+                            <Cell
+                                key={`cell-${index}`}
+                                fill={COLORS[index % COLORS.length]}
                             />
-                        </div>
-                    </div>
-                );
-            })}
+                        ))}
+                    </Bar>
+                </BarChart>
+            </ResponsiveContainer>
         </div>
     );
 }

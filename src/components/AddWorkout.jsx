@@ -16,7 +16,7 @@ const EXERCISE_SUGGESTIONS = [
     "Lunge",
 ];
 
-const LogExerciseSubmit = (handleAdd, loading, isValid, success) => (
+const LogExerciseSubmit = ({ handleAdd, loading, isValid, success }) => (
     <button
         type="button"
         className="btn btn--primary"
@@ -42,19 +42,19 @@ const LogExerciseSubmit = (handleAdd, loading, isValid, success) => (
     </button>
 );
 
-const RepsSetsSetterForm = (form, set) => (
+const RepsSetsSetterForm = ({ form, set }) => (
     <div className="add-workout__grid">
         <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Sets</label>
             <input
-                names="sets"
+                name="sets"
                 className="form-input"
                 type="number"
                 min="1"
                 max="99"
                 placeholder="3"
                 value={form.sets}
-                onChange={() => set("sets")}
+                onChange={set("sets")}
             />
         </div>
         <div className="form-group" style={{ marginBottom: 0 }}>
@@ -67,7 +67,7 @@ const RepsSetsSetterForm = (form, set) => (
                 max="999"
                 placeholder="10"
                 value={form.reps}
-                onChange={() => set("reps")}
+                onChange={set("reps")}
             />
         </div>
     </div>
@@ -82,7 +82,7 @@ const ExercisePickerForm = ({ form, set }) => (
             list="exercise-suggestions"
             placeholder="e.g. Bench Press"
             value={form.exercise}
-            onChange={() => set("exercise")}
+            onChange={set("exercise")}
         />
         <datalist id="exercise-suggestions">
             {EXERCISE_SUGGESTIONS.map((s) => (
@@ -100,7 +100,7 @@ const DatePickerForm = ({ form, todayISO, set }) => (
             type="date"
             value={form.date}
             max={todayISO}
-            onChange={() => set("date")}
+            onChange={set("date")}
         />
     </div>
 );
