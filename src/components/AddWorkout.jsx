@@ -16,7 +16,7 @@ const EXERCISE_SUGGESTIONS = [
     "Lunge",
 ];
 
-const LogExerciseSubmit = (handleAdd, loading, isValid, success) => (
+const LogExerciseSubmit = ({ handleAdd, loading, isValid, success }) => (
     <button
         type="button"
         className="btn btn--primary"
